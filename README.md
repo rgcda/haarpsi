@@ -7,17 +7,16 @@ In most practical situations, images and videos can neither be compressed nor tr
 
 The HaarPSI was first proposed in 
 
-R. Reisenhofer, S. Bosse, G. Kutyniok and T. Wiegand.
-A Haar Wavelet-Based Perceptual Similarity Index.
-Signal Processing: Image Communication, vol. 61, 33-43, 2018.
+R. Reisenhofer, S. Bosse, G. Kutyniok and T. Wiegand.  
+A Haar Wavelet-Based Perceptual Similarity Index.  
+Signal Processing: Image Communication, vol. 61, 33-43, 2018.  
 <a href="https://doi.org/10.1016/j.image.2017.11.001">doi:10.1016/j.image.2017.11.001</a>
 
 Please cite this paper if you use the HaarPSI in your research.
 
 ## Authors
 
-**Rafael Reisenhofer** - HarPSI.m and HaarPSIExt.m
-
+**Rafael Reisenhofer** - HarPSI.m and HaarPSIExt.m  
 **David Neumann** - haarPsi.py ([lecode-official](https://github.com/lecode-official))
 
 ## License
