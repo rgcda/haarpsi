@@ -17,7 +17,7 @@ Please cite this paper if you use the HaarPSI in your research.
 ## Authors
 
 **Rafael Reisenhofer** - HarPSI.m and HaarPSIExt.m  
-**David Neumann** (https://github.com/lecode-official)) - haarPsi.py ([lecode-official]
+**David Neumann** (https://github.com/lecode-official) - haarPsi.py ([lecode-official]
 
 ## License
 
