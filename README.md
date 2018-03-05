@@ -5,7 +5,7 @@ In most practical situations, images and videos can neither be compressed nor tr
 
 ## Acknowledgments
 
-This project implements the perceptual similiarty measure proposed in
+The HaarPSI was first proposed in 
 
 R. Reisenhofer, S. Bosse, G. Kutyniok and T. Wiegand.
 A Haar Wavelet-Based Perceptual Similarity Index.
