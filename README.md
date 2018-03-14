@@ -8,7 +8,7 @@ In most practical situations, images and videos can neither be compressed nor tr
 The HaarPSI was first proposed in 
 
 R. Reisenhofer, S. Bosse, G. Kutyniok and T. Wiegand.  
-A Haar Wavelet-Based Perceptual Similarity Index.  
+A Haar Wavelet-Based Perceptual Similarity Index for Image Quality Assessment. 
 Signal Processing: Image Communication, vol. 61, 33-43, 2018.  
 <a href="https://doi.org/10.1016/j.image.2017.11.001">doi:10.1016/j.image.2017.11.001</a>
 
