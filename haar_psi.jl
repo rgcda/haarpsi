@@ -5,9 +5,10 @@ Julia language version of HaarPSI
 Translated from Matlab code written by Rafael Reisenhofer circa 08/05/2017
 =#
 
-using DSP: conv
-
 # export haar_psi, haar_psi_maps
+
+using ImageFiltering: imfilter, centered
+conv(signal, kernel) = imfilter(signal, centered(kernel)) # cf conv 'same' in matlab
 
 
 """
@@ -56,20 +57,21 @@ https://doi.org/10.1016/j.image.2017.11.001
 todo: handle RGB type properly
 """
 haar_psi_maps(
-    imgRef::AbstractMatrix{<:Number},
-    imgDis::AbstractMatrix{<:Number},
-    preprocessWithSubsampling::Bool = true,
-) = HaarPSI(Float64.(imgRef), Float64.(imgDis), preprocessWithSubsampling)
+    imgRef::AbstractArray{<:Number},
+    imgDis::AbstractArray{<:Number},
+    args...; varargs...
+) = HaarPSI(Float64.(imgRef), Float64.(imgDis), args...; varargs...)
 
 function haar_psi_maps(
-    imgRef::AbstractMatrix{<:AbstractFloat},
-    imgDis::AbstractMatrix{<:AbstractFloat},
+    imgRef::AbstractArray{<:AbstractFloat},
+    imgDis::AbstractArray{<:AbstractFloat},
     preprocessWithSubsampling::Bool = true;
     C::Real = 30,
     alpha::Real = 4.2,
 )
 
     colorImage = size(imgRef, 3) == 3
+    colorImage || size(imgRef, 3) == 1 || throw("bad size")
 
     # initialization and preprocessing
 
@@ -120,27 +122,27 @@ function haar_psi_maps(
 
     # compute weights and similarity for each orientation
     for ori in 1:2
-        weights[:,:,ori] = max(
+        weights[:,:,ori] = max.(
             abs.(coeffsRefY[:, :, 3 + (ori-1)*nScales]),
             abs.(coeffsDistY[:, :, 3 + (ori-1)*nScales]),
         )
-        coeffsRefYMag = abs.(coeffsRefY[:,:,(1:2) + (ori-1)*nScales])
-        coeffsDistYMag = abs.(coeffsDistY[:,:,(1:2) + (ori-1)*nScales])
-        localSimilarities[:,:,ori] = sum((2*coeffsRefYMag.*coeffsDistYMag + C) ./
-            (coeffsRefYMag.^2 + coeffsDistYMag.^2 + C), dims=3) / 2
+        coeffsRefYMag = abs.(coeffsRefY[:, :, (1:2) .+ (ori-1)*nScales])
+        coeffsDistYMag = abs.(coeffsDistY[:, :, (1:2) .+ (ori-1)*nScales])
+        localSimilarities[:,:,ori] = sum((2*coeffsRefYMag .* coeffsDistYMag .+ C) ./
+            (coeffsRefYMag.^2 + coeffsDistYMag.^2 .+ C), dims=3) / 2
     end
 
     # compute similarities for color channels
     if colorImage
-        similarityI = (2*coeffsRefI.*coeffsDistI + C) ./ (coeffsRefI.^2 + coeffsDistI.^2 + C)
-        similarityQ = (2*coeffsRefQ.*coeffsDistQ + C) ./ (coeffsRefQ.^2 + coeffsDistQ.^2 + C)
+        similarityI = (2*coeffsRefI .* coeffsDistI .+ C) ./ (coeffsRefI.^2 + coeffsDistI.^2 .+ C)
+        similarityQ = (2*coeffsRefQ .* coeffsDistQ .+ C) ./ (coeffsRefQ.^2 + coeffsDistQ.^2 .+ C)
         localSimilarities[:,:,3] = (similarityI + similarityQ) / 2
         weights[:,:,3] = (weights[:,:,1] + weights[:,:,2]) / 2
     end
 
     # compute final score
     similarity = haar_psi_log_inv(
-            sum(HaarPSILog(localSimilarities, alpha) .* weights) /
+            sum(haar_psi_log.(localSimilarities, alpha) .* weights) /
             sum(weights),
         alpha)^2
 
@@ -150,11 +152,13 @@ end
 
 function haar_psi_dec(X::AbstractMatrix{<:AbstractFloat}, nScales::Int)
     coeffs = zeros(size(X)..., 2*nScales)
-    for k = 1:nScales
-        haarFilter = 2^(-k) * ones(2^k, 2^k)
+    for k in 1:nScales
+        haarFilter = 2.0^(-k) * ones(2^k, 2^k)
         haarFilter[1:(end÷2),:] = -haarFilter[1:(end÷2),:]
-        coeffs[:,:,k] = conv(X, haarFilter)
-        coeffs[:,:,k + nScales] = conv(X, haarFilter')
+        tmp = conv(X, haarFilter)
+        coeffs[:,:,k] = tmp
+        tmp = conv(X, haarFilter')
+        coeffs[:,:,k + nScales] = tmp
     end
     return coeffs
 end
@@ -168,3 +172,38 @@ end
 haar_psi_log(x, alpha) = 1 / (1 + exp(-alpha * x))
 
 haar_psi_log_inv(x, alpha) = log(x / (1-x)) / alpha
+
+
+#=
+Test blocks
+=#
+
+if false # "gray"
+    imgRef = zeros(64, 64)
+    imgRef[20:30,40:50] .= 200
+    imgDis = imgRef + rand(-20:20, size(imgRef))
+    imgDis = clamp.(imgDis, 0, 255)
+    similarity, sim_map, wt_map = haar_psi_maps(imgRef, imgDis)
+    p2 = jim(
+     jim(imgRef, "True"),
+     jim(imgDis, "Noisy"),
+     jim(sim_map, "sim = $(round(similarity, digits=3))"),
+     jim(wt_map),
+#    layout=(2,1),
+    )
+end
+
+
+if false # "color"
+    imgRef = zeros(64, 64, 3)
+    imgRef[20:30, 40:50, :] .= 200
+    imgDis = imgRef + rand(-20:20, size(imgRef))
+    imgDis = clamp.(imgDis, 0, 255)
+    similarity, sim_map, wt_map = haar_psi_maps(imgRef, imgDis)
+    p3 = jim(
+     jim(imgRef, "True"),
+     jim(imgDis, "Noisy"),
+     jim(sim_map, "sim = $(round(similarity, digits=3))"),
+     jim(wt_map),
+    )
+end
